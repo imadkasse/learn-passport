@@ -3,10 +3,14 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable } from '@nestjs/common';
 import { Strategy, VerifyCallback } from 'passport-google-oauth20';
 import { UsersService } from 'src/users/users.service';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
-  constructor(private readonly usersService: UsersService) {
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly jwtService: JwtService,
+  ) {
     super({
       clientID: process.env.GOOGLE_CLIENT_ID || '',
       clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
@@ -14,7 +18,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       scope: ['email', 'profile'],
     });
   }
-
+  
   async validate(
     accessToken: string,
     refreshToken: string,
@@ -30,8 +34,9 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       picture: photos[0].value,
       access_token: accessToken,
     };
-    const existenUser = await this.usersService.checkUserExists(user.email);
-    if (!existenUser) {
+    const existingUser = await this.usersService.checkUserExists(user.email);
+
+    if (!existingUser) {
       // إذا المستخدم غير موجود، قم بإنشاء مستخدم جديد
       const newUser = await this.usersService.signUp({
         email: user.email,
@@ -39,12 +44,19 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         password: undefined,
         googleId: user.id,
       });
-      console.log('New user created:', profile);
+      const payload = { sub: newUser._id, email: newUser.email };
+      const appAccessToken = this.jwtService.sign(payload);
       return done(null, {
         user: newUser,
-        access_token: user.access_token,
+        access_token: appAccessToken,
       });
     }
-    done(null, user);
+    const oldUser = await this.usersService.findByEmail(user.email); // using findByEmail method just for return user information
+    const payload = { sub: oldUser?._id, email: oldUser?.email };
+    const appAccessToken = this.jwtService.sign(payload);
+    done(null, {
+      user: oldUser,
+      access_token: appAccessToken, // ← أرسل JWT الخاص بك
+    });
   }
 }
