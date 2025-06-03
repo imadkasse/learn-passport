@@ -16,6 +16,7 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     const user = await this.usersModel.findOne({ email: email });
+
     if (!user) {
       throw new NotFoundException(`User with email ${email} not found`);
     }
@@ -31,5 +32,9 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${userId} not found`);
     }
     return me;
+  }
+  async checkUserExists(email: string): Promise<boolean> {
+    const user = await this.usersModel.findOne({ email: email });
+    return user ? true : false; // Returns true if user exists, false otherwise
   }
 }

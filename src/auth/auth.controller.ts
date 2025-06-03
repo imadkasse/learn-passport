@@ -32,4 +32,15 @@ export class AuthController {
       user: await this.authService.me(req.user.userId),
     };
   }
+  @Get('google')
+  @UseGuards(AuthGuard('google'))
+  async googleAuth(@Request() req) {
+    // Google redirect page
+  }
+
+  @Get('google/redirect')
+  @UseGuards(AuthGuard('google'))
+  googleAuthRedirect(@Request() req) {
+    return req.user; // هنا يجيك الداتا من validate()
+  }
 }
