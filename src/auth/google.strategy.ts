@@ -18,7 +18,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       scope: ['email', 'profile'],
     });
   }
-  
+
   async validate(
     accessToken: string,
     refreshToken: string,
@@ -44,7 +44,11 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
         password: undefined,
         googleId: user.id,
       });
-      const payload = { sub: newUser._id, email: newUser.email };
+      const payload = {
+        sub: newUser._id,
+        email: newUser.email,
+        role: newUser.role,
+      };
       const appAccessToken = this.jwtService.sign(payload);
       return done(null, {
         user: newUser,

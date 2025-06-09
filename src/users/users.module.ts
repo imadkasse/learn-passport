@@ -6,10 +6,11 @@ https://docs.nestjs.com/modules
 
 import { Module } from '@nestjs/common';
 import { usersProviders } from './providers/users.providers';
+import { UsersController } from './users.controller';
 
 @Module({
   imports: [DatabaseModule],
-  controllers: [],
+  controllers: [UsersController],
   providers: [UsersService, ...usersProviders],
   exports: [UsersService, ...usersProviders],
 })

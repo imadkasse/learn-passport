@@ -37,4 +37,7 @@ export class UsersService {
     const user = await this.usersModel.findOne({ email: email });
     return user ? true : false; // Returns true if user exists, false otherwise
   }
+  async findAll(): Promise<User[]> {
+    return this.usersModel.find().select('-password').exec();
+  }
 }
